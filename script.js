@@ -67,80 +67,122 @@
     body.className = 'win-body';
 
     // --- APP CONTENT ---
-    if (appId === 'notepad') {
-      windowCount++;
-      win.id = `notepad-${windowCount}`;
-      // Notepad header
-      const npHeader = document.createElement('div');
-      npHeader.classList.add('notepad-header');
-      npHeader.innerHTML = `
-        <input type="text" class="np-filename" placeholder="File name">
-        <button class="np-load">Load</button>
-        <button class="np-save">Save</button>
-        <button class="np-new">New</button>
-      `;
-      // File list
-      const fileList = document.createElement('select');
-      fileList.classList.add('np-file-list');
-      // Textarea
-      const ta = document.createElement('textarea');
-      ta.classList.add('notepad-text');
-      // Append to body
-      body.append(npHeader, fileList, ta);
+  if (appId === 'notepad') {
+  windowCount++;
+  win.id = `notepad-${windowCount}`;
 
-      const filenameInput = npHeader.querySelector('.np-filename');
-      const loadBtn = npHeader.querySelector('.np-load');
-      const saveBtn = npHeader.querySelector('.np-save');
-      const newBtn = npHeader.querySelector('.np-new');
-      const fileListElement = fileList;
+  // Notepad header with all buttons
+  const npHeader = document.createElement('div');
+  npHeader.classList.add('notepad-header');
+  npHeader.innerHTML = `
+    <input type="text" class="np-filename" placeholder="File name">
+    <select class="np-file-list"></select>
+    <button class="np-load">Load</button>
+    <button class="np-save">Save</button>
+    <button class="np-new">New</button>
+    <button class="np-export">Export</button>
+    <button class="np-import">Import</button>
+  `;
 
-      function updateFileList() {
-        fileListElement.innerHTML = '';
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key.startsWith('tfk_file_')) {
-            const option = document.createElement('option');
-            option.value = key;
-            option.textContent = key.replace('tfk_file_', '');
-            fileListElement.appendChild(option);
-          }
-        }
+  const filenameInput = npHeader.querySelector('.np-filename');
+  const fileListElement = npHeader.querySelector('.np-file-list');
+  const loadBtn = npHeader.querySelector('.np-load');
+  const saveBtn = npHeader.querySelector('.np-save');
+  const newBtn = npHeader.querySelector('.np-new');
+  const exportBtn = npHeader.querySelector('.np-export');
+  const importBtn = npHeader.querySelector('.np-import');
+
+  // Textarea
+  const ta = document.createElement('textarea');
+  ta.classList.add('notepad-text');
+
+  // Append header + textarea to body
+  body.append(npHeader, ta);
+
+  // Update file list from LocalStorage
+  function updateFileList() {
+    fileListElement.innerHTML = '';
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith('tfk_file_')) {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = key.replace('tfk_file_', '');
+        fileListElement.appendChild(option);
       }
+    }
+  }
 
-      fileListElement.addEventListener('change', () => {
-        const key = fileListElement.value;
-        if (key) {
-          const data = localStorage.getItem(key);
-          ta.value = data;
-          filenameInput.value = key.replace('tfk_file_', '');
-        }
-      });
+  // File list selection
+  fileListElement.addEventListener('change', () => {
+    const key = fileListElement.value;
+    if (key) {
+      const data = localStorage.getItem(key);
+      ta.value = data;
+      filenameInput.value = key.replace('tfk_file_', '');
+    }
+  });
 
-      saveBtn.addEventListener('click', () => {
-        const name = filenameInput.value.trim();
-        if (!name) return alert("Enter a file name!");
-        const key = `tfk_file_${name}`;
-        localStorage.setItem(key, ta.value);
-        alert(`Saved as ${name}.txt`);
-        updateFileList();
-      });
+  // Load button
+  loadBtn.addEventListener('click', () => {
+    const name = filenameInput.value.trim();
+    if (!name) return alert("Enter a file name!");
+    const key = `tfk_file_${name}`;
+    const data = localStorage.getItem(key);
+    if (data === null) return alert("File not found!");
+    ta.value = data;
+    updateFileList();
+  });
 
-      loadBtn.addEventListener('click', () => {
-        const name = filenameInput.value.trim();
-        if (!name) return alert("Enter a file name!");
-        const key = `tfk_file_${name}`;
-        const data = localStorage.getItem(key);
-        if (data === null) return alert("File not found!");
-        ta.value = data;
-        updateFileList();
-      });
+  // Save button
+  saveBtn.addEventListener('click', () => {
+    const name = filenameInput.value.trim();
+    if (!name) return alert("Enter a file name!");
+    const key = `tfk_file_${name}`;
+    localStorage.setItem(key, ta.value);
+    alert(`Saved as ${name}.txt`);
+    updateFileList();
+  });
 
-      newBtn.addEventListener('click', () => {
-        filenameInput.value = '';
-        ta.value = '';
-      });
+  // New file button
+  newBtn.addEventListener('click', () => {
+    filenameInput.value = '';
+    ta.value = '';
+  });
 
-      updateFileList();
+  // Export button
+  exportBtn.addEventListener('click', () => {
+    const name = filenameInput.value.trim();
+    if (!name) return alert("Enter a file name!");
+    const blob = new Blob([ta.value], { type: "text/plain" });
+    const link = document.createElement('a');
+    link.download = `${name}.txt`;
+    link.href = URL.createObjectURL(blob);
+    link.click();
+    URL.revokeObjectURL(link.href);
+  });
+
+  // Import button
+  importBtn.addEventListener('click', () => {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.txt';
+    fileInput.onchange = e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        ta.value = ev.target.result;
+        filenameInput.value = file.name.replace('.txt','');
+      };
+      reader.readAsText(file);
+    };
+    fileInput.click();
+  });
+
+  updateFileList();
+}
+
     }
     else if (appId === 'browser') {
       // Mini-browser code remains unchanged
