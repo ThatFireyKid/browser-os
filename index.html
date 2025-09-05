@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TFK Browser OS</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="desktop"></div>
+
+  <!-- Taskbar -->
+  <div id="taskbar">
+    <button id="start-btn" aria-label="Start">Start</button>
+    <div id="task-buttons" class="task-buttons"></div>
+    <div class="clock" id="clock"></div>
+  </div>
+
+  <!-- Start Menu -->
+  <div id="start-menu" class="hidden" role="menu">
+    <div class="start-header">TFK-OS</div>
+    <button class="start-item" data-app="browser">Mini Browser</button>
+    <button class="start-item" data-app="notepad">Notepad</button>
+    <button class="start-item" data-app="settings">Settings</button>
+    <div class="start-footer">Tip: Double-click desktop later for shortcuts</div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
