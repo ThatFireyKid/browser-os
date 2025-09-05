@@ -36,6 +36,40 @@
   setInterval(updateClock, 1000);
   updateClock();
 
+  // --- DESKTOP SHORTCUTS ---
+  const shortcuts = [
+    { app: 'notepad', label: 'Notepad', img: 'path/to/notepad.png' },
+    { app: 'browser', label: 'Mini Browser', img: 'path/to/browser.png' },
+    { app: 'settings', label: 'Settings', img: 'path/to/settings.png' }
+  ];
+
+  shortcuts.forEach((sc, index) => {
+    const scDiv = document.createElement('div');
+    scDiv.className = 'desktop-shortcut';
+    scDiv.style.position = 'absolute';
+    scDiv.style.left = `${20 + index * 120}px`;
+    scDiv.style.top = `20px`;
+    scDiv.style.cursor = 'pointer';
+    scDiv.style.textAlign = 'center';
+
+    const img = document.createElement('img');
+    img.src = sc.img;
+    img.style.width = '80px';
+    img.style.height = '80px';
+    img.style.display = 'block';
+    img.style.marginBottom = '4px';
+    scDiv.appendChild(img);
+
+    const label = document.createElement('span');
+    label.textContent = sc.label;
+    label.style.color = '#fff';
+    scDiv.appendChild(label);
+
+    scDiv.addEventListener('dblclick', () => openApp(sc.app));
+
+    desktop.appendChild(scDiv);
+  });
+
   // App factory
   function openApp(appId) {
     const winId = `win-${Date.now()}-${Math.floor(Math.random()*1000)}`;
