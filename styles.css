@@ -1,1 +1,170 @@
+/* Simple reset */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:#0f1720;
+  --panel:#111827;
+  --muted:#a3a3a3;
+  --accent:#5563ff;
+  --win-bg:#f8fafc;
+  --win-fg:#0f1720;
+}
+
+/* Body & Desktop */
+body {
+  height: 100vh;
+  background: linear-gradient(180deg,#071029 0%, #0f1720 60%);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  color: white;
+  overflow: hidden;
+}
+
+#desktop {
+  position: absolute;
+  inset: 0 0 48px 0; /* leave room for taskbar */
+  padding: 18px;
+  user-select: none;
+}
+
+/* Taskbar */
+#taskbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 48px;
+  background: rgba(6, 8, 15, 0.8);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding: 6px 10px;
+  box-shadow: 0 -6px 20px rgba(0,0,0,0.45);
+  z-index: 10000;
+}
+
+#start-btn {
+  background: var(--accent);
+  border: none;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.task-buttons {
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex:1;
+  overflow-x:auto;
+}
+
+/* Start Menu */
+#start-menu {
+  position: fixed;
+  left: 12px;
+  bottom: 60px;
+  width: 220px;
+  background: linear-gradient(180deg,#0b1220,#0b1630);
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 12px 40px rgba(2,6,23,0.7);
+  z-index: 20000;
+}
+.hidden { display: none; }
+.start-header { font-size: 14px; color: var(--muted); margin-bottom: 8px; }
+.start-item {
+  display:block;
+  width:100%;
+  padding:8px 10px;
+  text-align:left;
+  background: transparent;
+  color: white;
+  border-radius:8px;
+  border:none;
+  cursor:pointer;
+  margin:6px 0;
+}
+.start-item:hover { background: rgba(255,255,255,0.03); }
+
+/* Window */
+.window {
+  position: absolute;
+  width: 560px;
+  height: 360px;
+  min-width: 300px;
+  min-height: 180px;
+  background: var(--win-bg);
+  color: var(--win-fg);
+  border-radius: 12px;
+  box-shadow: 0 18px 60px rgba(2,6,23,0.6);
+  overflow: hidden;
+  display:flex;
+  flex-direction:column;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+
+.win-header {
+  height: 40px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 0 10px;
+  background: linear-gradient(180deg,#eef2ff, #e7ecff);
+  cursor: grab;
+  user-select: none;
+}
+.win-title { font-weight:600; color:#0b1320; }
+.win-controls { display:flex; gap:8px; align-items:center; }
+
+.win-control-btn {
+  width: 14px; height:14px; border-radius:50%;
+  display:inline-block; cursor:pointer;
+}
+.win-close { background: #ff6b6b; }
+.win-min { background: #ffd166; }
+
+/* Content area */
+.win-body {
+  padding: 12px;
+  flex: 1;
+  overflow:auto;
+  background: white;
+}
+
+/* Notepad styles */
+.notepad-text {
+  width:100%;
+  height:100%;
+  min-height:200px;
+  border:none;
+  resize:none;
+  outline:none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+  font-size:13px;
+  color:#0b1320;
+}
+
+/* Taskbar button style */
+.task-btn {
+  background: rgba(255,255,255,0.04);
+  color: white;
+  padding:6px 10px;
+  border-radius: 8px;
+  border: none;
+  cursor:pointer;
+  display:flex;
+  gap:8px;
+  align-items:center;
+  white-space:nowrap;
+}
+
+/* Clock */
+.clock {
+  color: var(--muted);
+  font-size:13px;
+  padding:0 8px;
+  margin-left:auto;
+}
 
