@@ -40,7 +40,8 @@
   const shortcuts = [
     { app: 'notepad', label: 'Notepad', img: 'path/to/notepad.png' },
     { app: 'browser', label: 'Mini Browser', img: 'path/to/browser.png' },
-    { app: 'settings', label: 'Settings', img: 'path/to/settings.png' }
+    { app: 'settings', label: 'Settings', img: 'images/settingsicon.png
+    ' }
   ];
 
   shortcuts.forEach((sc, index) => {
