@@ -90,6 +90,12 @@
       const exportBtn = npHeader.querySelector('.np-export');
       const importBtn = npHeader.querySelector('.np-import');
 
+      // Delete button
+      const deleteBtn = document.createElement('button');
+      deleteBtn.classList.add('np-delete');
+      deleteBtn.textContent = 'Delete';
+      npHeader.appendChild(deleteBtn);
+
       const ta = document.createElement('textarea');
       ta.classList.add('notepad-text');
 
@@ -162,6 +168,17 @@
           reader.readAsText(file);
         };
         fileInput.click();
+      });
+
+      deleteBtn.addEventListener('click', () => {
+        const key = fileListElement.value;
+        if (!key) return alert("Select a file to delete!");
+        if (confirm(`Are you sure you want to delete "${key.replace('tfk_file_', '')}"?`)) {
+          localStorage.removeItem(key);
+          ta.value = '';
+          filenameInput.value = '';
+          updateFileList();
+        }
       });
 
       updateFileList();
