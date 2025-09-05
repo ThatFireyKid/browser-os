@@ -5,18 +5,17 @@
   const taskButtons = document.getElementById('task-buttons');
   const clockEl = document.getElementById('clock');
 
-  // z-index manager
   let topZ = 1000;
-  let windowCount = 0; // for Notepad multi-window IDs
+  let windowCount = 0;
 
   // Toggle start menu
-  startBtn.addEventListener('click', (e) => {
+  startBtn.addEventListener('click', e => {
     e.stopPropagation();
     startMenu.classList.toggle('hidden');
   });
 
   // Close start menu if click outside
-  document.addEventListener('click', (e) => {
+  document.addEventListener('click', e => {
     if (!startMenu.contains(e.target) && e.target !== startBtn) {
       startMenu.classList.add('hidden');
     }
@@ -32,7 +31,7 @@
 
   // Simple clock
   function updateClock() {
-    clockEl.textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    clockEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
   setInterval(updateClock, 1000);
   updateClock();
@@ -67,125 +66,106 @@
     body.className = 'win-body';
 
     // --- APP CONTENT ---
-  if (appId === 'notepad') {
-  windowCount++;
-  win.id = `notepad-${windowCount}`;
+    if (appId === 'notepad') {
+      windowCount++;
+      win.id = `notepad-${windowCount}`;
 
-  // Notepad header with all buttons
-  const npHeader = document.createElement('div');
-  npHeader.classList.add('notepad-header');
-  npHeader.innerHTML = `
-    <input type="text" class="np-filename" placeholder="File name">
-    <select class="np-file-list"></select>
-    <button class="np-load">Load</button>
-    <button class="np-save">Save</button>
-    <button class="np-new">New</button>
-    <button class="np-export">Export</button>
-    <button class="np-import">Import</button>
-  `;
+      const npHeader = document.createElement('div');
+      npHeader.classList.add('notepad-header');
+      npHeader.innerHTML = `
+        <input type="text" class="np-filename" placeholder="File name">
+        <select class="np-file-list"></select>
+        <button class="np-load">Load</button>
+        <button class="np-save">Save</button>
+        <button class="np-new">New</button>
+        <button class="np-export">Export</button>
+        <button class="np-import">Import</button>
+      `;
 
-  const filenameInput = npHeader.querySelector('.np-filename');
-  const fileListElement = npHeader.querySelector('.np-file-list');
-  const loadBtn = npHeader.querySelector('.np-load');
-  const saveBtn = npHeader.querySelector('.np-save');
-  const newBtn = npHeader.querySelector('.np-new');
-  const exportBtn = npHeader.querySelector('.np-export');
-  const importBtn = npHeader.querySelector('.np-import');
+      const filenameInput = npHeader.querySelector('.np-filename');
+      const fileListElement = npHeader.querySelector('.np-file-list');
+      const loadBtn = npHeader.querySelector('.np-load');
+      const saveBtn = npHeader.querySelector('.np-save');
+      const newBtn = npHeader.querySelector('.np-new');
+      const exportBtn = npHeader.querySelector('.np-export');
+      const importBtn = npHeader.querySelector('.np-import');
 
-  // Textarea
-  const ta = document.createElement('textarea');
-  ta.classList.add('notepad-text');
+      const ta = document.createElement('textarea');
+      ta.classList.add('notepad-text');
 
-  // Append header + textarea to body
-  body.append(npHeader, ta);
+      body.append(npHeader, ta);
 
-  // Update file list from LocalStorage
-  function updateFileList() {
-    fileListElement.innerHTML = '';
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key.startsWith('tfk_file_')) {
-        const option = document.createElement('option');
-        option.value = key;
-        option.textContent = key.replace('tfk_file_', '');
-        fileListElement.appendChild(option);
+      function updateFileList() {
+        fileListElement.innerHTML = '';
+        Object.keys(localStorage)
+          .filter(k => k.startsWith('tfk_file_'))
+          .forEach(k => {
+            const option = document.createElement('option');
+            option.value = k;
+            option.textContent = k.replace('tfk_file_', '');
+            fileListElement.appendChild(option);
+          });
       }
-    }
-  }
 
-  // File list selection
-  fileListElement.addEventListener('change', () => {
-    const key = fileListElement.value;
-    if (key) {
-      const data = localStorage.getItem(key);
-      ta.value = data;
-      filenameInput.value = key.replace('tfk_file_', '');
-    }
-  });
+      fileListElement.addEventListener('change', () => {
+        const key = fileListElement.value;
+        if (key) {
+          ta.value = localStorage.getItem(key) || '';
+          filenameInput.value = key.replace('tfk_file_', '');
+        }
+      });
 
-  // Load button
-  loadBtn.addEventListener('click', () => {
-    const name = filenameInput.value.trim();
-    if (!name) return alert("Enter a file name!");
-    const key = `tfk_file_${name}`;
-    const data = localStorage.getItem(key);
-    if (data === null) return alert("File not found!");
-    ta.value = data;
-    updateFileList();
-  });
+      loadBtn.addEventListener('click', () => {
+        const key = `tfk_file_${filenameInput.value.trim()}`;
+        const data = localStorage.getItem(key);
+        if (!data) return alert("File not found!");
+        ta.value = data;
+        updateFileList();
+      });
 
-  // Save button
-  saveBtn.addEventListener('click', () => {
-    const name = filenameInput.value.trim();
-    if (!name) return alert("Enter a file name!");
-    const key = `tfk_file_${name}`;
-    localStorage.setItem(key, ta.value);
-    alert(`Saved as ${name}.txt`);
-    updateFileList();
-  });
+      saveBtn.addEventListener('click', () => {
+        const name = filenameInput.value.trim();
+        if (!name) return alert("Enter a file name!");
+        localStorage.setItem(`tfk_file_${name}`, ta.value);
+        alert(`Saved as ${name}.txt`);
+        updateFileList();
+      });
 
-  // New file button
-  newBtn.addEventListener('click', () => {
-    filenameInput.value = '';
-    ta.value = '';
-  });
+      newBtn.addEventListener('click', () => {
+        filenameInput.value = '';
+        ta.value = '';
+      });
 
-  // Export button
-  exportBtn.addEventListener('click', () => {
-    const name = filenameInput.value.trim();
-    if (!name) return alert("Enter a file name!");
-    const blob = new Blob([ta.value], { type: "text/plain" });
-    const link = document.createElement('a');
-    link.download = `${name}.txt`;
-    link.href = URL.createObjectURL(blob);
-    link.click();
-    URL.revokeObjectURL(link.href);
-  });
+      exportBtn.addEventListener('click', () => {
+        const name = filenameInput.value.trim();
+        if (!name) return alert("Enter a file name!");
+        const blob = new Blob([ta.value], { type: 'text/plain' });
+        const link = document.createElement('a');
+        link.download = `${name}.txt`;
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(link.href);
+      });
 
-  // Import button
-  importBtn.addEventListener('click', () => {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.txt';
-    fileInput.onchange = e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(ev) {
-        ta.value = ev.target.result;
-        filenameInput.value = file.name.replace('.txt','');
-      };
-      reader.readAsText(file);
-    };
-    fileInput.click();
-  });
+      importBtn.addEventListener('click', () => {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.txt';
+        fileInput.onchange = e => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = ev => {
+            ta.value = ev.target.result;
+            filenameInput.value = file.name.replace('.txt','');
+          };
+          reader.readAsText(file);
+        };
+        fileInput.click();
+      });
 
-  updateFileList();
-}
-
-    }
-    else if (appId === 'browser') {
-      // Mini-browser code remains unchanged
+      updateFileList();
+    } else if (appId === 'browser') {
       const form = document.createElement('form');
       form.style.display = 'flex';
       form.style.gap = '8px';
@@ -198,6 +178,7 @@
       go.textContent = 'Go';
       go.type = 'submit';
       form.append(input, go);
+
       const frameWrap = document.createElement('div');
       frameWrap.style.height = 'calc(100% - 44px)';
       frameWrap.style.marginTop = '8px';
@@ -207,15 +188,16 @@
       iframe.style.border = '1px solid #eee';
       iframe.src = 'about:blank';
       frameWrap.append(iframe);
+
       form.addEventListener('submit', e => {
         e.preventDefault();
         let val = input.value.trim();
         if (!/^https?:\/\//i.test(val)) val = 'https://' + val;
         iframe.src = val;
       });
+
       body.append(form, frameWrap);
-    }
-    else if (appId === 'settings') {
+    } else if (appId === 'settings') {
       const label = document.createElement('div');
       label.textContent = 'Appearance';
       const btn = document.createElement('button');
@@ -237,10 +219,12 @@
     // Focus & minimize/close logic
     function focusWin() { win.style.zIndex = ++topZ; }
     win.addEventListener('mousedown', focusWin);
+
     tbtn.addEventListener('click', () => {
       if (win.style.display === 'none') { win.style.display = 'flex'; focusWin(); }
       else { win.classList.toggle('minimized'); win.style.display = win.classList.contains('minimized') ? 'none' : 'flex'; if (!win.classList.contains('minimized')) focusWin(); }
     });
+
     closeBtn.addEventListener('click', () => { win.remove(); tbtn.remove(); });
     minBtn.addEventListener('click', () => { win.style.display = 'none'; });
 
@@ -253,6 +237,7 @@
       offsetY = e.clientY - rect.top;
       focusWin();
     });
+
     document.addEventListener('mousemove', e => {
       if (!dragging) return;
       let nx = e.clientX - offsetX;
@@ -262,6 +247,7 @@
       win.style.left = nx + 'px';
       win.style.top = ny + 'px';
     });
+
     document.addEventListener('mouseup', () => dragging = false);
 
     focusWin();
@@ -269,5 +255,4 @@
 
   // Double-click desktop to open notepad
   desktop.addEventListener('dblclick', () => openApp('notepad'));
-
 })();
