@@ -38,7 +38,7 @@
 
   // --- DESKTOP SHORTCUTS ---
   const shortcuts = [
-    { app: 'notepad', label: 'Notepad', img: 'path/to/notepad.png' },
+    { app: 'notepad', label: 'Notepad', img: 'images/browser.png' },
     { app: 'browser', label: 'Mini Browser', img: 'images/notepadicon.png' },
     { app: 'settings', label: 'Settings', img: 'images/settingsicon.png
     ' }
