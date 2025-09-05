@@ -68,13 +68,96 @@
     body.className = 'win-body';
 
     // App content
-    if (appId === 'notepad') {
-      const ta = document.createElement('textarea');
-      ta.className = 'notepad-text';
-      const storeKey = 'tfk_notepad_v1';
-      ta.value = localStorage.getItem(storeKey) || 'Welcome to TFK Notepad.\nYour notes auto-save.';
-      ta.addEventListener('input', () => localStorage.setItem(storeKey, ta.value));
-      body.appendChild(ta);
+   let windowCount = 0;
+
+function openApp(appId) {
+  if (appId === 'notepad') {
+    windowCount++;
+    const winId = `notepad-${windowCount}`;
+    const win = document.createElement('div');
+    win.classList.add('notepad-window');
+    win.id = winId;
+    win.style.top = `${50 + windowCount * 30}px`;
+    win.style.left = `${50 + windowCount * 30}px`;
+
+    const header = document.createElement('div');
+    header.classList.add('notepad-header');
+    header.innerHTML = `
+      <input type="text" class="np-filename" placeholder="File name">
+      <button class="np-load">Load</button>
+      <button class="np-save">Save</button>
+      <button class="np-new">New</button>
+    `;
+    win.appendChild(header);
+
+    const fileList = document.createElement('select');
+    fileList.classList.add('np-file-list');
+    win.appendChild(fileList);
+
+    const ta = document.createElement('textarea');
+    ta.classList.add('notepad-text');
+    win.appendChild(ta);
+
+    document.getElementById('desktop').appendChild(win);
+
+    const filenameInput = win.querySelector('.np-filename');
+    const loadBtn = win.querySelector('.np-load');
+    const saveBtn = win.querySelector('.np-save');
+    const newBtn = win.querySelector('.np-new');
+    const fileListElement = win.querySelector('.np-file-list');
+
+    function updateFileList() {
+      fileListElement.innerHTML = '';
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('tfk_file_')) {
+          const option = document.createElement('option');
+          option.value = key;
+          option.textContent = key.replace('tfk_file_', '');
+          fileListElement.appendChild(option);
+        }
+      }
+    }
+
+    fileListElement.addEventListener('change', () => {
+      const key = fileListElement.value;
+      if (key) {
+        const data = localStorage.getItem(key);
+        ta.value = data;
+        filenameInput.value = key.replace('tfk_file_', '');
+      }
+    });
+
+    saveBtn.addEventListener('click', () => {
+      const name = filenameInput.value.trim();
+      if (!name) return alert("Enter a file name!");
+      const key = `tfk_file_${name}`;
+      localStorage.setItem(key, ta.value);
+      alert(`Saved as ${name}.txt`);
+      updateFileList();
+    });
+
+    loadBtn.addEventListener('click', () => {
+      const name = filenameInput.value.trim();
+      if (!name) return alert("Enter a file name!");
+      const key = `tfk_file_${name}`;
+      const data = localStorage.getItem(key);
+      if (data === null) return alert("File not found!");
+      ta.value = data;
+      updateFileList();
+    });
+
+    newBtn.addEventListener('click', () => {
+      filenameInput.value = '';
+      ta.value = '';
+    });
+
+    updateFileList();
+  }
+}
+
+document.querySelector('#start-menu button').addEventListener('click', () => openApp('notepad'));
+
     } else if (appId === 'browser') {
       // mini browser
       const form = document.createElement('form');
