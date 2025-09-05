@@ -38,10 +38,9 @@
 
   // --- DESKTOP SHORTCUTS ---
   const shortcuts = [
-    { app: 'notepad', label: 'Notepad', img: 'images/browser.png' },
-    { app: 'browser', label: 'Mini Browser', img: 'images/notepadicon.png' },
-    { app: 'settings', label: 'Settings', img: 'images/settingsicon.png
-    ' }
+    { app: 'notepad', label: 'Notepad', img: 'images/notepadicon.png' },
+    { app: 'browser', label: 'Mini Browser', img: 'images/browser.png' },
+    { app: 'settings', label: 'Settings', img: 'images/settingsicon.png' }
   ];
 
   shortcuts.forEach((sc, index) => {
@@ -52,11 +51,12 @@
     scDiv.style.top = `20px`;
     scDiv.style.cursor = 'pointer';
     scDiv.style.textAlign = 'center';
+    scDiv.style.pointerEvents = 'auto'; // ensures clicks register
 
     const img = document.createElement('img');
     img.src = sc.img;
-    img.style.width = '80px';
-    img.style.height = '80px';
+    img.width = 80;   // scaled display
+    img.height = 80;
     img.style.display = 'block';
     img.style.marginBottom = '4px';
     scDiv.appendChild(img);
@@ -66,18 +66,22 @@
     label.style.color = '#fff';
     scDiv.appendChild(label);
 
-    scDiv.addEventListener('dblclick', () => openApp(sc.app));
+    // Prevent desktop double-click interference
+    scDiv.addEventListener('dblclick', e => {
+      e.stopPropagation();
+      openApp(sc.app);
+    });
 
     desktop.appendChild(scDiv);
   });
 
-  // App factory
+  // --- APP FACTORY ---
   function openApp(appId) {
-    const winId = `win-${Date.now()}-${Math.floor(Math.random()*1000)}`;
+    const winId = `win-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const win = document.createElement('div');
     win.className = 'window';
-    win.style.left = `${60 + Math.random()*120}px`;
-    win.style.top = `${60 + Math.random()*80}px`;
+    win.style.left = `${60 + Math.random() * 120}px`;
+    win.style.top = `${60 + Math.random() * 80}px`;
     win.style.zIndex = ++topZ;
     win.dataset.winId = winId;
 
@@ -115,6 +119,7 @@
         <button class="np-new">New</button>
         <button class="np-export">Export</button>
         <button class="np-import">Import</button>
+        <button class="np-delete">Delete</button>
       `;
 
       const filenameInput = npHeader.querySelector('.np-filename');
@@ -124,12 +129,7 @@
       const newBtn = npHeader.querySelector('.np-new');
       const exportBtn = npHeader.querySelector('.np-export');
       const importBtn = npHeader.querySelector('.np-import');
-
-      // Delete button
-      const deleteBtn = document.createElement('button');
-      deleteBtn.classList.add('np-delete');
-      deleteBtn.textContent = 'Delete';
-      npHeader.appendChild(deleteBtn);
+      const deleteBtn = npHeader.querySelector('.np-delete');
 
       const ta = document.createElement('textarea');
       ta.classList.add('notepad-text');
@@ -268,7 +268,6 @@
     tbtn.dataset.winId = winId;
     taskButtons.appendChild(tbtn);
 
-    // Focus & minimize/close logic
     function focusWin() { win.style.zIndex = ++topZ; }
     win.addEventListener('mousedown', focusWin);
 
@@ -306,5 +305,8 @@
   }
 
   // Double-click desktop to open notepad
-  desktop.addEventListener('dblclick', () => openApp('notepad'));
+  desktop.addEventListener('dblclick', e => {
+    if (!e.target.classList.contains('desktop-shortcut')) openApp('notepad');
+  });
 })();
+
