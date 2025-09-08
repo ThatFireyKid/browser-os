@@ -8,47 +8,60 @@
   let topZ = 1000;
   let windowCount = 0;
 
-  // --- APP REGISTRY SYSTEM ---
-  window.appRegistry = {};
+  // Toggle start menu
+  startBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    startMenu.classList.toggle('hidden');
+  });
 
-  window.registerApp = function(appData) {
-    if (!appData.id) return console.error('App must have an id!');
-    window.appRegistry[appData.id] = appData;
-  };
-
-  async function openApp(appId) {
-    if (!window.appRegistry[appId]) {
-      // Dynamically load app from apps folder
-      try {
-        await import(`./apps/${appId}.js`);
-      } catch(e) {
-        return alert(`App "${appId}" not found`);
-      }
+  // Close start menu if click outside
+  document.addEventListener('click', e => {
+    if (!startMenu.contains(e.target) && e.target !== startBtn) {
+      startMenu.classList.add('hidden');
     }
+  });
 
-    const appData = window.appRegistry[appId];
-    const win = createWindow(appData.name, appData.icon);
+  // Start menu app clicks
+  document.querySelectorAll('.start-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openApp(btn.dataset.app);
+      startMenu.classList.add('hidden');
+    });
+  });
 
-    // If app exported a default function, run it
-    if (appData.default) appData.default(win.body, win.id);
+  // Simple clock
+  function updateClock() {
+    clockEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
+  setInterval(updateClock, 1000);
+  updateClock();
 
-  // --- CREATE WINDOW FUNCTION ---
-  function createWindow(titleText, icon) {
-    const winId = `win-${Date.now()}-${Math.floor(Math.random()*1000)}`;
+  // --- OPEN APP FUNCTION ---
+  async function openApp(appId) {
+    const winId = `win-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const win = document.createElement('div');
     win.className = 'window';
-    win.style.left = `${60 + Math.random()*120}px`;
-    win.style.top = `${60 + Math.random()*80}px`;
+    win.style.left = `${60 + Math.random() * 120}px`;
+    win.style.top = `${60 + Math.random() * 80}px`;
     win.style.zIndex = ++topZ;
     win.dataset.winId = winId;
 
-    // Header
+    // Load app dynamically
+    try {
+      const module = await import(`./apps/${appId}.js`);
+      const appContent = module.default({ desktop, topZ });
+      win.appendChild(appContent);
+    } catch (err) {
+      const errorMsg = document.createElement('div');
+      errorMsg.textContent = `App "${appId}" failed to load.`;
+      win.appendChild(errorMsg);
+      console.error(err);
+    }
+
+    // Header with title and controls
     const header = document.createElement('div');
     header.className = 'win-header';
-    const title = document.createElement('div');
-    title.className = 'win-title';
-    title.textContent = titleText || 'App';
+    header.textContent = appId;
     const controls = document.createElement('div');
     controls.className = 'win-controls';
     const minBtn = document.createElement('span');
@@ -56,19 +69,13 @@
     const closeBtn = document.createElement('span');
     closeBtn.className = 'win-control-btn win-close';
     controls.append(minBtn, closeBtn);
-    header.append(title, controls);
+    header.appendChild(controls);
+    win.insertBefore(header, win.firstChild);
 
-    // Body
-    const body = document.createElement('div');
-    body.className = 'win-body';
-
-    win.append(header, body);
-    desktop.appendChild(win);
-
-    // --- TASKBAR BUTTON ---
+    // TASKBAR BUTTON
     const tbtn = document.createElement('button');
     tbtn.className = 'task-btn';
-    tbtn.textContent = titleText;
+    tbtn.textContent = appId;
     tbtn.dataset.winId = winId;
     taskButtons.appendChild(tbtn);
 
@@ -76,20 +83,14 @@
     win.addEventListener('mousedown', focusWin);
 
     tbtn.addEventListener('click', () => {
-      if (win.style.display === 'none') {
-        win.style.display = 'flex'; 
-        focusWin();
-      } else {
-        win.classList.toggle('minimized');
-        win.style.display = win.classList.contains('minimized') ? 'none' : 'flex';
-        if (!win.classList.contains('minimized')) focusWin();
-      }
+      if (win.style.display === 'none') { win.style.display = 'flex'; focusWin(); }
+      else { win.classList.toggle('minimized'); win.style.display = win.classList.contains('minimized') ? 'none' : 'flex'; if (!win.classList.contains('minimized')) focusWin(); }
     });
 
     closeBtn.addEventListener('click', () => { win.remove(); tbtn.remove(); });
     minBtn.addEventListener('click', () => { win.style.display = 'none'; });
 
-    // --- DRAGGING ---
+    // Dragging
     let dragging = false, offsetX = 0, offsetY = 0;
     header.addEventListener('mousedown', e => {
       dragging = true;
@@ -111,42 +112,37 @@
 
     document.addEventListener('mouseup', () => dragging = false);
 
-    // --- RESIZING ---
-    win.style.resize = 'both';
-    win.style.overflow = 'hidden';
+    // Resizing
+    const resizeHandle = document.createElement('div');
+    resizeHandle.className = 'resize-handle';
+    win.appendChild(resizeHandle);
 
-    windowCount++;
-    return { id: winId, body, header };
-  }
-
-  // --- TOGGLE START MENU ---
-  startBtn.addEventListener('click', e => {
-    e.stopPropagation();
-    startMenu.classList.toggle('hidden');
-  });
-
-  document.addEventListener('click', e => {
-    if (!startMenu.contains(e.target) && e.target !== startBtn) {
-      startMenu.classList.add('hidden');
-    }
-  });
-
-  document.querySelectorAll('.start-item').forEach(btn => {
-    btn.addEventListener('click', () => {
-      openApp(btn.dataset.app);
-      startMenu.classList.add('hidden');
+    let resizing = false, startX, startY, startWidth, startHeight;
+    resizeHandle.addEventListener('mousedown', e => {
+      e.stopPropagation();
+      resizing = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      startWidth = win.offsetWidth;
+      startHeight = win.offsetHeight;
+      focusWin();
     });
-  });
 
-  // --- CLOCK ---
-  function updateClock() {
-    clockEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    document.addEventListener('mousemove', e => {
+      if (!resizing) return;
+      win.style.width = Math.max(100, startWidth + (e.clientX - startX)) + 'px';
+      win.style.height = Math.max(100, startHeight + (e.clientY - startY)) + 'px';
+    });
+
+    document.addEventListener('mouseup', () => resizing = false);
+
+    desktop.appendChild(win);
+    focusWin();
   }
-  setInterval(updateClock, 1000);
-  updateClock();
 
-  // --- DOUBLE-CLICK DESKTOP ---
+  // Double-click desktop to open notepad
   desktop.addEventListener('dblclick', e => {
-    if (!e.target.classList.contains('window')) openApp('file-explorer');
+    if (!e.target.classList.contains('window')) openApp('notepad');
   });
+
 })();
