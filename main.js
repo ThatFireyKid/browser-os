@@ -7,14 +7,7 @@
 
   let topZ = 1000;
 
-  // --- CLOCK ---
-  function updateClock() {
-    clockEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
-  setInterval(updateClock, 1000);
-  updateClock();
-
-  // --- START MENU TOGGLE ---
+  // Toggle start menu
   startBtn.addEventListener('click', e => {
     e.stopPropagation();
     startMenu.classList.toggle('hidden');
@@ -26,13 +19,18 @@
     }
   });
 
-  // Start menu app clicks
   document.querySelectorAll('.start-item').forEach(btn => {
     btn.addEventListener('click', () => {
       openApp(btn.dataset.app);
       startMenu.classList.add('hidden');
     });
   });
+
+  function updateClock() {
+    clockEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
 
   // --- OPEN APP FUNCTION ---
   async function openApp(appId) {
@@ -44,12 +42,10 @@
     win.style.zIndex = ++topZ;
     win.dataset.winId = winId;
 
-    // HEADER + CONTROLS
+    // Header
     const header = document.createElement('div');
     header.className = 'win-header';
-    const title = document.createElement('div');
-    title.className = 'win-title';
-    title.textContent = appId;
+    header.textContent = appId;
     const controls = document.createElement('div');
     controls.className = 'win-controls';
     const minBtn = document.createElement('span');
@@ -57,13 +53,20 @@
     const closeBtn = document.createElement('span');
     closeBtn.className = 'win-control-btn win-close';
     controls.append(minBtn, closeBtn);
-    header.append(title, controls);
+    header.appendChild(controls);
     win.appendChild(header);
 
-    // BODY
-    const body = document.createElement('div');
-    body.className = 'win-body';
-    win.appendChild(body);
+    // Load app dynamically
+    try {
+      const module = await import(`./apps/${appId}.js`);
+      const appContent = module.default({ desktop, topZ });
+      win.appendChild(appContent);
+    } catch (err) {
+      const errorMsg = document.createElement('div');
+      errorMsg.textContent = `App "${appId}" failed to load.`;
+      win.appendChild(errorMsg);
+      console.error(err);
+    }
 
     // TASKBAR BUTTON
     const tbtn = document.createElement('button');
@@ -76,25 +79,39 @@
     win.addEventListener('mousedown', focusWin);
 
     tbtn.addEventListener('click', () => {
-      win.style.display = (win.style.display === 'none') ? 'flex' : 'none';
-      focusWin();
+      if (win.style.display === 'none') { win.style.display = 'flex'; focusWin(); }
+      else { win.classList.toggle('minimized'); win.style.display = win.classList.contains('minimized') ? 'none' : 'flex'; if (!win.classList.contains('minimized')) focusWin(); }
     });
+
     closeBtn.addEventListener('click', () => { win.remove(); tbtn.remove(); });
     minBtn.addEventListener('click', () => { win.style.display = 'none'; });
 
-    // DRAG
-    let dragging = false, dragOffsetX, dragOffsetY;
+    // Dragging
+    let dragging = false, offsetX = 0, offsetY = 0;
     header.addEventListener('mousedown', e => {
       dragging = true;
-      dragOffsetX = e.clientX - win.offsetLeft;
-      dragOffsetY = e.clientY - win.offsetTop;
+      const rect = win.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
       focusWin();
     });
 
-    // RESIZE
+    document.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      let nx = e.clientX - offsetX;
+      let ny = e.clientY - offsetY;
+      nx = Math.max(6, Math.min(window.innerWidth - win.offsetWidth - 6, nx));
+      ny = Math.max(6, Math.min(window.innerHeight - win.offsetHeight - 54, ny));
+      win.style.left = nx + 'px';
+      win.style.top = ny + 'px';
+    });
+    document.addEventListener('mouseup', () => dragging = false);
+
+    // Resizing
     const resizeHandle = document.createElement('div');
     resizeHandle.className = 'resize-handle';
     win.appendChild(resizeHandle);
+
     let resizing = false, startX, startY, startWidth, startHeight;
     resizeHandle.addEventListener('mousedown', e => {
       e.stopPropagation();
@@ -107,37 +124,22 @@
     });
 
     document.addEventListener('mousemove', e => {
-      if (dragging) {
-        win.style.left = Math.max(0, e.clientX - dragOffsetX) + 'px';
-        win.style.top = Math.max(0, e.clientY - dragOffsetY) + 'px';
-      }
-      if (resizing) {
-        win.style.width = Math.max(100, startWidth + (e.clientX - startX)) + 'px';
-        win.style.height = Math.max(100, startHeight + (e.clientY - startY)) + 'px';
-      }
+      if (!resizing) return;
+      win.style.width = Math.max(100, startWidth + (e.clientX - startX)) + 'px';
+      win.style.height = Math.max(100, startHeight + (e.clientY - startY)) + 'px';
     });
-    document.addEventListener('mouseup', () => { dragging = false; resizing = false; });
+    document.addEventListener('mouseup', () => resizing = false);
 
     desktop.appendChild(win);
     focusWin();
+  }
 
-    // LOAD APP CONTENT LAST
-    try {
-      const module = await import(`./apps/${appId}.js`);
-      const appContent = await module.default({ desktop, body, win, topZ });
-      if (appContent) body.appendChild(appContent);
-    } catch (err) {
-      body.textContent = `Failed to load app "${appId}"`;
-      console.error(err);
+  // --- KEYBIND: Ctrl + F opens file-explorer ---
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key.toLowerCase() === 'f') {
+      e.preventDefault();
+      openApp('file-explorer'); // make sure file-explorer.js exists in ./apps/
     }
-  }
+  });
 
-// Keybind: Ctrl + F to open File Explorer
-document.addEventListener('keydown', e => {
-  if (e.ctrlKey && e.key.toLowerCase() === 'f') {
-    e.preventDefault(); // prevent browser search
-    openApp('file-explorer'); // matches file-explorer.js
-  }
-});
 })();
-
