@@ -132,12 +132,12 @@
     }
   }
 
-  // --- KEYBIND FOR FILE EXPLORER ---
-  document.addEventListener('keydown', e => {
-    if (e.ctrlKey && e.key.toLowerCase() === 'a') {
-      e.preventDefault();
-      openApp('file-explorer');
-    }
-  });
+// Keybind: Ctrl + F to open File Explorer
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key.toLowerCase() === 'f') {
+    e.preventDefault(); // prevent browser search
+    openApp('file-explorer'); // matches file-explorer.js
+  }
+});
 })();
 
