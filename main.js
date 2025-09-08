@@ -134,7 +134,7 @@
 
   // --- KEYBIND FOR FILE EXPLORER ---
   document.addEventListener('keydown', e => {
-    if (e.ctrlKey && e.key.toLowerCase() === 'f') {
+    if (e.ctrlKey && e.key.toLowerCase() === 'a') {
       e.preventDefault();
       openApp('file-explorer');
     }
