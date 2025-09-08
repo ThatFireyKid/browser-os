@@ -36,45 +36,6 @@
   setInterval(updateClock, 1000);
   updateClock();
 
-  // --- DESKTOP SHORTCUTS ---
-  const shortcuts = [
-    { app: 'notepad', label: 'Notepad', img: 'images/notepadicon.png' },
-    { app: 'browser', label: 'Mini Browser', img: 'images/browser.png' },
-    { app: 'settings', label: 'Settings', img: 'images/settingsicon.png' }
-  ];
-
-  shortcuts.forEach((sc, index) => {
-    const scDiv = document.createElement('div');
-    scDiv.className = 'desktop-shortcut';
-    scDiv.style.position = 'absolute';
-    scDiv.style.left = `${20 + index * 120}px`;
-    scDiv.style.top = `20px`;
-    scDiv.style.cursor = 'pointer';
-    scDiv.style.textAlign = 'center';
-    scDiv.style.pointerEvents = 'auto'; // ensures clicks register
-
-    const img = document.createElement('img');
-    img.src = sc.img;
-    img.width = 80;   // scaled display
-    img.height = 80;
-    img.style.display = 'block';
-    img.style.marginBottom = '4px';
-    scDiv.appendChild(img);
-
-    const label = document.createElement('span');
-    label.textContent = sc.label;
-    label.style.color = '#fff';
-    scDiv.appendChild(label);
-
-    // Prevent desktop double-click interference
-    scDiv.addEventListener('dblclick', e => {
-      e.stopPropagation();
-      openApp(sc.app);
-    });
-
-    desktop.appendChild(scDiv);
-  });
-
   // --- APP FACTORY ---
   function openApp(appId) {
     const winId = `win-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -305,8 +266,5 @@
   }
 
   // Double-click desktop to open notepad
-  desktop.addEventListener('dblclick', e => {
-    if (!e.target.classList.contains('desktop-shortcut')) openApp('notepad');
-  });
+  desktop.addEventListener('dblclick', () => openApp('notepad'));
 })();
-
