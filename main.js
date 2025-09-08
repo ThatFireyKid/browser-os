@@ -9,23 +9,27 @@
 
   // Toggle start menu
   startBtn.addEventListener('click', e => {
-    e.stopPropagation();
+    e.stopPropagation(); // prevent document click from immediately closing it
     startMenu.classList.toggle('hidden');
   });
 
+  // Close start menu if click outside
   document.addEventListener('click', e => {
     if (!startMenu.contains(e.target) && e.target !== startBtn) {
       startMenu.classList.add('hidden');
     }
   });
 
+  // Start menu app clicks
   document.querySelectorAll('.start-item').forEach(btn => {
-    btn.addEventListener('click', () => {
-      openApp(btn.dataset.app);
+    btn.addEventListener('click', async () => {
+      const appId = btn.dataset.app;
+      if (appId) await openApp(appId);
       startMenu.classList.add('hidden');
     });
   });
 
+  // Simple clock
   function updateClock() {
     clockEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
@@ -42,7 +46,7 @@
     win.style.zIndex = ++topZ;
     win.dataset.winId = winId;
 
-    // Header
+    // Header with title and controls
     const header = document.createElement('div');
     header.className = 'win-header';
     header.textContent = appId;
@@ -105,6 +109,7 @@
       win.style.left = nx + 'px';
       win.style.top = ny + 'px';
     });
+
     document.addEventListener('mouseup', () => dragging = false);
 
     // Resizing
@@ -128,18 +133,16 @@
       win.style.width = Math.max(100, startWidth + (e.clientX - startX)) + 'px';
       win.style.height = Math.max(100, startHeight + (e.clientY - startY)) + 'px';
     });
+
     document.addEventListener('mouseup', () => resizing = false);
 
     desktop.appendChild(win);
     focusWin();
   }
 
-  // --- KEYBIND: Ctrl + F opens file-explorer ---
-  document.addEventListener('keydown', e => {
-    if (e.ctrlKey && e.key.toLowerCase() === 'f') {
-      e.preventDefault();
-      openApp('file-explorer'); // make sure file-explorer.js exists in ./apps/
-    }
+  // Double-click desktop to open File Explorer
+  desktop.addEventListener('dblclick', e => {
+    if (e.target === desktop) openApp('file-explorer');
   });
 
 })();
