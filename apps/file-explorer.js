@@ -1,58 +1,76 @@
-export default async function FileExplorer(body, winId) {
-  body.style.display = 'flex';
-  body.style.flexDirection = 'column';
-  body.style.padding = '10px';
-  body.style.overflowY = 'auto';
+// file-explorer.js
+(() => {
+  const appId = 'file-explorer';
 
-  const header = document.createElement('h2');
-  header.textContent = 'File Explorer';
-  body.appendChild(header);
+  // Register the app
+  registerApp({
+    id: appId,
+    name: 'File Explorer',
+    icon: 'images/folder.png',
+    default: (container, winId) => {
+      container.style.display = 'flex';
+      container.style.flexDirection = 'column';
+      container.style.padding = '8px';
+      container.style.overflow = 'auto';
+      container.style.height = '100%';
 
-  const appList = document.createElement('div');
-  appList.style.display = 'flex';
-  appList.style.flexDirection = 'column';
-  appList.style.gap = '6px';
-  body.appendChild(appList);
+      const header = document.createElement('div');
+      header.style.display = 'flex';
+      header.style.justifyContent = 'space-between';
+      header.style.marginBottom = '8px';
 
-  // Load apps manifest
-  try {
-    const response = await fetch('./apps/apps.json');
-    const apps = await response.json();
+      const title = document.createElement('div');
+      title.textContent = 'Apps';
+      title.style.fontWeight = 'bold';
 
-    apps.forEach(app => {
-      const appDiv = document.createElement('div');
-      appDiv.style.display = 'flex';
-      appDiv.style.alignItems = 'center';
-      appDiv.style.gap = '8px';
-      appDiv.style.padding = '4px';
-      appDiv.style.cursor = 'pointer';
-      appDiv.style.borderRadius = '4px';
-      appDiv.style.transition = 'background 0.2s';
+      const refreshBtn = document.createElement('button');
+      refreshBtn.textContent = 'Refresh';
 
-      appDiv.addEventListener('mouseenter', () => appDiv.style.background = 'rgba(255,255,255,0.1)');
-      appDiv.addEventListener('mouseleave', () => appDiv.style.background = 'transparent');
+      header.append(title, refreshBtn);
+      container.appendChild(header);
 
-      // Icon
-      const icon = document.createElement('img');
-      icon.src = app.icon || 'images/defaultapp.png';
-      icon.width = 32;
-      icon.height = 32;
-      appDiv.appendChild(icon);
+      const appList = document.createElement('div');
+      appList.style.display = 'grid';
+      appList.style.gridTemplateColumns = 'repeat(auto-fill, 100px)';
+      appList.style.gap = '8px';
+      container.appendChild(appList);
 
-      // Label
-      const label = document.createElement('span');
-      label.textContent = app.name;
-      appDiv.appendChild(label);
+      function renderApps() {
+        appList.innerHTML = '';
+        Object.keys(window.appRegistry).forEach(id => {
+          if (id === appId) return; // skip File Explorer itself
+          const app = window.appRegistry[id];
+          const appDiv = document.createElement('div');
+          appDiv.style.textAlign = 'center';
+          appDiv.style.cursor = 'pointer';
+          appDiv.style.userSelect = 'none';
 
-      // Launch on double-click
-      appDiv.addEventListener('dblclick', () => {
-        window.parent.openApp(app.id);
-      });
+          const img = document.createElement('img');
+          img.src = app.icon || 'images/default-app.png';
+          img.style.width = '64px';
+          img.style.height = '64px';
+          img.style.display = 'block';
+          img.style.marginBottom = '4px';
+          appDiv.appendChild(img);
 
-      appList.appendChild(appDiv);
-    });
-  } catch (err) {
-    body.textContent = 'Failed to load apps.';
-    console.error(err);
-  }
-}
+          const label = document.createElement('span');
+          label.textContent = app.name;
+          appDiv.appendChild(label);
+
+          appDiv.addEventListener('dblclick', () => {
+            // Open the app
+            if (window.appRegistry[id]) {
+              window.openApp(id);
+            }
+          });
+
+          appList.appendChild(appDiv);
+        });
+      }
+
+      renderApps();
+
+      refreshBtn.addEventListener('click', renderApps);
+    }
+  });
+})();
