@@ -6,19 +6,22 @@
   const clockEl = document.getElementById('clock');
 
   let topZ = 1000;
+  let windowCount = 0;
 
-  // --- Start Menu Toggle ---
+  // Toggle start menu
   startBtn.addEventListener('click', e => {
     e.stopPropagation();
     startMenu.classList.toggle('hidden');
   });
 
+  // Close start menu if click outside
   document.addEventListener('click', e => {
     if (!startMenu.contains(e.target) && e.target !== startBtn) {
       startMenu.classList.add('hidden');
     }
   });
 
+  // Start menu app clicks
   document.querySelectorAll('.start-item').forEach(btn => {
     btn.addEventListener('click', () => {
       openApp(btn.dataset.app);
@@ -26,15 +29,16 @@
     });
   });
 
-  // --- Clock ---
+  // Clock
   function updateClock() {
     clockEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
   setInterval(updateClock, 1000);
   updateClock();
 
-  // --- APP WINDOW CREATOR ---
-  function createWindow(winId, appName) {
+  // --- APP FACTORY ---
+  async function openApp(appId) {
+    const winId = `win-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const win = document.createElement('div');
     win.className = 'window';
     win.style.left = `${60 + Math.random() * 120}px`;
@@ -42,12 +46,11 @@
     win.style.zIndex = ++topZ;
     win.dataset.winId = winId;
 
-    // Header
     const header = document.createElement('div');
     header.className = 'win-header';
     const title = document.createElement('div');
     title.className = 'win-title';
-    title.textContent = appName;
+    title.textContent = appId;
     const controls = document.createElement('div');
     controls.className = 'win-controls';
     const minBtn = document.createElement('span');
@@ -57,14 +60,24 @@
     controls.append(minBtn, closeBtn);
     header.append(title, controls);
 
-    // Body
     const body = document.createElement('div');
     body.className = 'win-body';
+
+    // Load app dynamically
+    try {
+      const module = await import(`./apps/${appId}.js`);
+      if (module && module.default) {
+        module.default(body, winId); // each app exports a default function that receives the window body
+      }
+    } catch (err) {
+      body.textContent = `Failed to load app "${appId}".`;
+      console.error(err);
+    }
 
     win.append(header, body);
     desktop.appendChild(win);
 
-    // --- Taskbar Button ---
+    // Taskbar button
     const tbtn = document.createElement('button');
     tbtn.className = 'task-btn';
     tbtn.textContent = title.textContent;
@@ -75,20 +88,14 @@
     win.addEventListener('mousedown', focusWin);
 
     tbtn.addEventListener('click', () => {
-      if (win.style.display === 'none') {
-        win.style.display = 'flex';
-        focusWin();
-      } else {
-        win.classList.toggle('minimized');
-        win.style.display = win.classList.contains('minimized') ? 'none' : 'flex';
-        if (!win.classList.contains('minimized')) focusWin();
-      }
+      if (win.style.display === 'none') { win.style.display = 'flex'; focusWin(); }
+      else { win.classList.toggle('minimized'); win.style.display = win.classList.contains('minimized') ? 'none' : 'flex'; if (!win.classList.contains('minimized')) focusWin(); }
     });
 
     closeBtn.addEventListener('click', () => { win.remove(); tbtn.remove(); });
     minBtn.addEventListener('click', () => { win.style.display = 'none'; });
 
-    // --- Dragging ---
+    // Dragging
     let dragging = false, offsetX = 0, offsetY = 0;
     header.addEventListener('mousedown', e => {
       dragging = true;
@@ -97,7 +104,6 @@
       offsetY = e.clientY - rect.top;
       focusWin();
     });
-
     document.addEventListener('mousemove', e => {
       if (!dragging) return;
       let nx = e.clientX - offsetX;
@@ -107,31 +113,14 @@
       win.style.left = nx + 'px';
       win.style.top = ny + 'px';
     });
-
     document.addEventListener('mouseup', () => dragging = false);
 
-    // --- Resizing ---
-    win.style.resize = 'both';
-    win.style.overflow = 'auto';
-
-    return win;
+    focusWin();
   }
 
-  // --- Open App (dynamic import) ---
-  async function openApp(appId) {
-    try {
-      const appModule = await import(`./apps/${appId}.js`);
-      const winId = `win-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-      const win = createWindow(winId, appId);
-      appModule.default(win.querySelector('.win-body')); // render app
-    } catch (err) {
-      console.error(`Failed to load app "${appId}":`, err);
-      alert(`Could not load app "${appId}"`);
-    }
-  }
-
-  // --- Desktop Double Click (default Notepad) ---
+  // Double-click desktop opens file-explorer
   desktop.addEventListener('dblclick', e => {
-    if (!e.target.classList.contains('window')) openApp('notepad');
+    if (!e.target.classList.contains('window')) openApp('file-explorer');
   });
+
 })();
