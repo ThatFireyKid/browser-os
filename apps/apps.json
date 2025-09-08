@@ -1,0 +1,27 @@
+
+[
+  {
+    "id": "file-explorer",
+    "name": "File Explorer",
+    "icon": "images/fileexplorer.png",
+    "description": "Browse and open installed apps"
+  },
+  {
+    "id": "notepad",
+    "name": "Notepad",
+    "icon": "images/notepadicon.png",
+    "description": "Simple text editor"
+  },
+  {
+    "id": "browser",
+    "name": "Mini Browser",
+    "icon": "images/browser.png",
+    "description": "Browse the web"
+  },
+  {
+    "id": "settings",
+    "name": "Settings",
+    "icon": "images/settingsicon.png",
+    "description": "Adjust system settings"
+  }
+]
